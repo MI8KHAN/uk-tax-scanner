@@ -3,149 +3,363 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScanFree Pro | UK Tax Receipt Scanner</title>
+    <title>ScanFree Pro | Advanced UK Tax Scanner</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
-        :root { --uk-blue: #002366; --uk-red: #C8102E; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', Helvetica, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; color: #333; }
-        header { background: var(--uk-blue); color: white; width: 100%; padding: 20px 0; text-align: center; border-bottom: 4px solid var(--uk-red); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .container { max-width: 450px; width: 90%; background: white; margin: 20px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .btn-main { background: var(--uk-blue); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; margin-bottom: 15px; display: block; text-align: center; }
-        .btn-main:active { transform: scale(0.98); }
-        .ad-space { background: #fafafa; border: 1px dashed #bbb; height: 90px; margin: 15px 0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999; overflow: hidden; }
-        .status-box { padding: 12px; text-align: center; font-size: 0.9rem; background: #e7f3ff; color: #0056b3; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid #d0e7ff; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: #555; }
-        input, select { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; box-sizing: border-box; transition: 0.3s; }
-        input:focus { border-color: var(--uk-blue); outline: none; }
-        #receipt-preview { width: 100%; border-radius: 10px; margin-bottom: 15px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        footer { font-size: 12px; color: #888; margin-top: 10px; text-align: center; padding-bottom: 20px; }
+        :root {
+            --primary: #002366; /* Royal Blue */
+            --accent: #C8102E;  /* Union Jack Red */
+            --success: #1e7e34;
+            --bg: #f4f7f9;
+            --card: #ffffff;
+            --text: #2d3436;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Header Navigation */
+        nav {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 1rem 0;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Ad Sections */
+        .ad-banner {
+            width: 100%;
+            background: #e1e1e1;
+            border: 1px dashed #999;
+            margin: 10px 0;
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #666;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Dashboard Cards */
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .main-scanner {
+            text-align: center;
+            border: 3px dashed #d1d8e0;
+            padding: 40px 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .main-scanner:hover {
+            border-color: var(--primary);
+            background: #f0f4ff;
+        }
+
+        .preview-area img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Form Styling */
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #555;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 2px solid #edeff2;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-success { background: var(--success); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+
+        /* Progress Bar */
+        #progress-container {
+            display: none;
+            margin-top: 20px;
+        }
+        .progress-bar {
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: 0.2s;
+        }
+
+        /* History Table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .history-table th, .history-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .history-table th { background: #f8f9fa; }
+
+        @media (max-width: 600px) {
+            .grid-inputs { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-<header>
-    <h1 style="margin:0; font-size: 1.8rem;">ScanFree Pro</h1>
-    <p style="margin:5px 0 0; opacity: 0.9;">HMRC-Ready Expense Logging</p>
-</header>
-
-<div class="ad-space" id="ad-top"> [ADSTERRA SOCIAL BAR SPACE] </div>
+<nav>
+    <i class="fa-solid fa-file-invoice-dollar"></i> ScanFree Pro UK
+</nav>
 
 <div class="container">
-    <img id="receipt-preview" src="#" alt="Preview">
     
-    <label class="btn-main">
-        📸 CAPTURE RECEIPT
-        <input type="file" id="image-upload" accept="image/*" capture="environment" style="display:none;">
-    </label>
+    <div class="ad-banner">Advertisement - High Performance UK Tax Tool</div>
 
-    <div id="status-msg" class="status-box"></div>
-
-    <div class="input-group">
-        <label>Transaction Date</label>
-        <input type="text" id="res-date" placeholder="DD/MM/YYYY">
+    <div class="card main-scanner" onclick="document.getElementById('file-input').click()">
+        <i class="fa-solid fa-cloud-arrow-up fa-3x" style="color: var(--primary)"></i>
+        <h3>Upload or Take Photo</h3>
+        <p>HMRC-Compliant Scanning (JPG, PNG)</p>
+        <input type="file" id="file-input" hidden accept="image/*" capture="environment">
+        <img id="preview-img" src="">
     </div>
 
-    <div class="input-group">
-        <label>Total Amount (£)</label>
-        <input type="text" id="res-amount" placeholder="0.00">
+    <div id="progress-container" class="card">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span id="status-text">Ready...</span>
+            <span id="percent-text">0%</span>
+        </div>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
     </div>
 
-    <div class="input-group">
-        <label>HMRC Expense Category</label>
-        <select id="res-category">
-            <option>Travel (Fuel/Train/Taxi)</option>
-            <option>Office Costs (Stationery/Phone)</option>
-            <option>Staff Costs (Salaries/Subcontractors)</option>
-            <option>Advertising & Marketing</option>
-            <option>Financial Costs (Insurance/Bank)</option>
-            <option>Other Business Expenses</option>
-        </select>
+    <div class="card">
+        <h3><i class="fa-solid fa-pen-to-square"></i> Transaction Details</h3>
+        <div class="grid-inputs">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="text" id="final-date" placeholder="DD/MM/YYYY">
+            </div>
+            <div class="form-group">
+                <label>Total Amount (£)</label>
+                <input type="text" id="final-amount" placeholder="0.00">
+            </div>
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+            <label>Expense Category</label>
+            <select id="final-category">
+                <option value="Car, Van & Travel">Car, Van & Travel</option>
+                <option value="Office Costs">Office Costs</option>
+                <option value="Advertising & Marketing">Advertising & Marketing</option>
+                <option value="Stock & Materials">Stock & Materials</option>
+                <option value="Financial Costs">Insurance & Financial</option>
+            </select>
+        </div>
+        <button class="btn btn-success" onclick="saveToHistory()"><i class="fa-solid fa-plus"></i> Save to Records</button>
     </div>
 
-    <button onclick="downloadCSV()" class="btn-main" style="background:#28a745; margin-top:10px;">💾 DOWNLOAD CSV</button>
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Recent Records</h3>
+            <button class="btn btn-outline" style="width: auto; padding: 8px 15px;" onclick="exportAllCSV()">
+                <i class="fa-solid fa-download"></i> Export CSV
+            </button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="history-table" id="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Category</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="ad-banner">Ads - Premium Tax Partnerships</div>
+
 </div>
 
-<div class="ad-space" id="ad-bottom"> [ADSTERRA NATIVE BANNER] </div>
-
-<footer>
-    &copy; 2026 UK Tax Record Assistant<br>
-    Built for Sole Traders & Small Businesses
-</footer>
-
 <script>
-    const uploadInput = document.getElementById('image-upload');
-    const statusMsg = document.getElementById('status-msg');
-    const previewImg = document.getElementById('receipt-preview');
+    let scanHistory = JSON.parse(localStorage.getItem('uk_tax_history')) || [];
+    updateTable();
 
-    uploadInput.addEventListener('change', async (e) => {
+    const fileInput = document.getElementById('file-input');
+    const progressContainer = document.getElementById('progress-container');
+    const progressFill = document.getElementById('progress-fill');
+    const statusText = document.getElementById('status-text');
+    const percentText = document.getElementById('percent-text');
+
+    fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Show UI feedback
-        previewImg.src = URL.createObjectURL(file);
-        previewImg.style.display = 'block';
-        statusMsg.style.display = 'block';
-        statusMsg.innerText = "Starting OCR Engine... ⚡";
-
+        // Reset UI
+        document.getElementById('preview-img').src = URL.createObjectURL(file);
+        document.getElementById('preview-img').style.display = 'block';
+        progressContainer.style.display = 'block';
+        
         try {
-            const worker = await Tesseract.createWorker('eng');
-            statusMsg.innerText = "Reading Receipt Details... 🔍";
-            
+            const worker = await Tesseract.createWorker('eng', 1, {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        let p = Math.floor(m.progress * 100);
+                        progressFill.style.width = p + '%';
+                        percentText.innerText = p + '%';
+                        statusText.innerText = "Scanning Receipt...";
+                    }
+                }
+            });
+
             const { data: { text } } = await worker.recognize(file);
-            console.log("Extracted Text:", text); // Debugging info
+            console.log("OCR Output:", text);
 
-            // 1. IMPROVED AMOUNT FINDER
-            // Finds numbers after £, TOTAL, AMT, or just the largest decimal number
+            // Analysis Logic
             const amountRegex = /(?:£|TOTAL|GBP|AMT|DUE)\s*([\d,]+\.\d{2})/i;
-            const foundAmount = text.match(amountRegex);
-            if (foundAmount) {
-                document.getElementById('res-amount').value = foundAmount[1].replace(',', '');
-            } else {
-                // Fallback: Find the last decimal number in the text (often the total)
-                const allAmounts = text.match(/\d+\.\d{2}/g);
-                if (allAmounts) document.getElementById('res-amount').value = allAmounts[allAmounts.length - 1];
-            }
+            const amountMatch = text.match(amountRegex);
+            if (amountMatch) document.getElementById('final-amount').value = amountMatch[1].replace(',','');
 
-            // 2. IMPROVED DATE FINDER
             const dateRegex = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/;
-            const foundDate = text.match(dateRegex);
-            if (foundDate) document.getElementById('res-date').value = foundDate[0];
+            const dateMatch = text.match(dateRegex);
+            if (dateMatch) document.getElementById('final-date').value = dateMatch[0];
 
-            statusMsg.innerText = "Scan Successful! ✅";
-            statusMsg.style.background = "#d4edda";
-            statusMsg.style.color = "#155724";
-            
+            statusText.innerText = "Scan Complete!";
             await worker.terminate();
         } catch (err) {
-            console.error("Scan Error:", err);
-            statusMsg.innerText = "Scan failed. Please use a clearer photo. ❌";
-            statusMsg.style.background = "#f8d7da";
-            statusMsg.style.color = "#721c24";
+            statusText.innerText = "Error scanning image.";
         }
     });
 
-    function downloadCSV() {
-        const date = document.getElementById('res-date').value || "Unknown";
-        const amount = document.getElementById('res-amount').value || "0.00";
-        const category = document.getElementById('res-category').value;
+    function saveToHistory() {
+        const entry = {
+            id: Date.now(),
+            date: document.getElementById('final-date').value,
+            amount: document.getElementById('final-amount').value,
+            category: document.getElementById('final-category').value
+        };
 
-        // Create CSV with BOM for Excel Support
-        const csvContent = "\uFEFFDate,Amount,Category\n" + `"${date}","${amount}","${category}"`;
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        if(!entry.date || !entry.amount) return alert("Please fill Date and Amount.");
+
+        scanHistory.unshift(entry);
+        localStorage.setItem('uk_tax_history', JSON.stringify(scanHistory));
+        updateTable();
         
+        // Reset inputs
+        document.getElementById('final-date').value = '';
+        document.getElementById('final-amount').value = '';
+    }
+
+    function updateTable() {
+        const tbody = document.getElementById('history-body');
+        tbody.innerHTML = scanHistory.map(item => `
+            <tr>
+                <td>${item.date}</td>
+                <td>£${item.amount}</td>
+                <td>${item.category}</td>
+                <td onclick="deleteItem(${item.id})" style="color:var(--accent); cursor:pointer;"><i class="fa-solid fa-trash"></i></td>
+            </tr>
+        `).join('');
+    }
+
+    function deleteItem(id) {
+        scanHistory = scanHistory.filter(i => i.id !== id);
+        localStorage.setItem('uk_tax_history', JSON.stringify(scanHistory));
+        updateTable();
+    }
+
+    function exportAllCSV() {
+        if(scanHistory.length === 0) return alert("No records to export.");
+        
+        const header = "\uFEFFDate,Amount,Category\n";
+        const rows = scanHistory.map(i => `"${i.date}","${i.amount}","${i.category}"`).join("\n");
+        const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        
-        link.setAttribute("href", url);
-        link.setAttribute("download", `UK-Receipt-${date.replace(/[\/\.]/g, '-')}.csv`);
-        link.style.visibility = 'hidden';
-        
-        document.body.appendChild(link);
+        link.href = URL.createObjectURL(blob);
+        link.download = "UK-Tax-Expenses-2026.csv";
         link.click();
-        document.body.removeChild(link);
-        
-        setTimeout(() => URL.revokeObjectURL(url), 100);
     }
 </script>
 
