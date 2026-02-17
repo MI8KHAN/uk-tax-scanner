@@ -3,126 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScanFree Pro | HMRC Receipt Scanner</title>
+    <title>ScanFree Pro | UK Tax Receipt Scanner</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
     <style>
-        :root { --uk-blue: #002366; --uk-red: #C8102E; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; }
-        header { background: var(--uk-blue); color: white; width: 100%; padding: 1.5rem; text-align: center; border-bottom: 4px solid var(--uk-red); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .container { max-width: 480px; width: 92%; background: white; margin: 20px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        .btn-scan { background: var(--uk-blue); color: white; border: none; padding: 18px; border-radius: 10px; font-size: 1.1rem; font-weight: bold; width: 100%; cursor: pointer; display: block; text-align: center; margin-bottom: 15px; }
-        .ad-box { background: #f1f1f1; border: 1px dashed #ccc; height: 90px; margin: 15px 0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #777; overflow: hidden; }
-        .status-bar { padding: 10px; text-align: center; font-size: 0.9rem; color: #555; background: #eef2f7; border-radius: 5px; margin-bottom: 15px; display: none; }
-        .field-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #444; }
-        input, select { width: 100%; padding: 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
-        #preview { width: 100%; border-radius: 10px; margin-bottom: 15px; display: none; }
+        :root { --uk-blue: #002366; --uk-red: #C8102E; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Helvetica, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; color: #333; }
+        header { background: var(--uk-blue); color: white; width: 100%; padding: 20px 0; text-align: center; border-bottom: 4px solid var(--uk-red); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .container { max-width: 450px; width: 90%; background: white; margin: 20px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .btn-main { background: var(--uk-blue); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; margin-bottom: 15px; display: block; text-align: center; }
+        .btn-main:active { transform: scale(0.98); }
+        .ad-space { background: #fafafa; border: 1px dashed #bbb; height: 90px; margin: 15px 0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999; overflow: hidden; }
+        .status-box { padding: 12px; text-align: center; font-size: 0.9rem; background: #e7f3ff; color: #0056b3; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid #d0e7ff; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: #555; }
+        input, select { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; box-sizing: border-box; transition: 0.3s; }
+        input:focus { border-color: var(--uk-blue); outline: none; }
+        #receipt-preview { width: 100%; border-radius: 10px; margin-bottom: 15px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        footer { font-size: 12px; color: #888; margin-top: 10px; text-align: center; padding-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>ScanFree Pro</h1>
-    <p>Free UK Tax Record Assistant</p>
+    <h1 style="margin:0; font-size: 1.8rem;">ScanFree Pro</h1>
+    <p style="margin:5px 0 0; opacity: 0.9;">HMRC-Ready Expense Logging</p>
 </header>
 
-<div class="ad-box" id="ad-top">
-    [AD SPACE - SOCIAL BAR]
-</div>
+<div class="ad-space" id="ad-top"> [ADSTERRA SOCIAL BAR SPACE] </div>
 
 <div class="container">
-    <img id="preview" src="#" alt="Receipt Preview">
+    <img id="receipt-preview" src="#" alt="Preview">
     
-    <label class="btn-scan">
-        📷 TAKE PHOTO / UPLOAD
-        <input type="file" id="upload" accept="image/*" capture="environment" style="display:none;">
+    <label class="btn-main">
+        📸 CAPTURE RECEIPT
+        <input type="file" id="image-upload" accept="image/*" capture="environment" style="display:none;">
     </label>
 
-    <div id="status" class="status-bar"></div>
+    <div id="status-msg" class="status-box"></div>
 
-    <div class="field-group">
+    <div class="input-group">
         <label>Transaction Date</label>
-        <input type="text" id="date" placeholder="DD/MM/YYYY">
+        <input type="text" id="res-date" placeholder="DD/MM/YYYY">
     </div>
 
-    <div class="field-group">
+    <div class="input-group">
         <label>Total Amount (£)</label>
-        <input type="text" id="amount" placeholder="0.00">
+        <input type="text" id="res-amount" placeholder="0.00">
     </div>
 
-    <div class="field-group">
-        <label>Expense Category (HMRC)</label>
-        <select id="category">
-            <option>Car, Van & Travel</option>
-            <option>Rent, Rates & Power</option>
-            <option>Phone & Internet</option>
-            <option>Advertising/Marketing</option>
-            <option>Office Stationery</option>
-            <option>Other Business Costs</option>
+    <div class="input-group">
+        <label>HMRC Expense Category</label>
+        <select id="res-category">
+            <option>Travel (Fuel/Train/Taxi)</option>
+            <option>Office Costs (Stationery/Phone)</option>
+            <option>Staff Costs (Salaries/Subcontractors)</option>
+            <option>Advertising & Marketing</option>
+            <option>Financial Costs (Insurance/Bank)</option>
+            <option>Other Business Expenses</option>
         </select>
     </div>
 
-    <button onclick="saveRecord()" class="btn-scan" style="background:#28a745; margin-top:10px;">💾 DOWNLOAD CSV RECORD</button>
+    <button onclick="downloadCSV()" class="btn-main" style="background:#28a745; margin-top:10px;">💾 DOWNLOAD CSV</button>
 </div>
 
-<div class="ad-box" id="ad-bottom">
-    [AD SPACE - NATIVE BANNER]
-</div>
+<div class="ad-space" id="ad-bottom"> [ADSTERRA NATIVE BANNER] </div>
+
+<footer>
+    &copy; 2026 UK Tax Record Assistant<br>
+    Built for Sole Traders & Small Businesses
+</footer>
 
 <script>
-    const upload = document.getElementById('upload');
-    const status = document.getElementById('status');
-    const preview = document.getElementById('preview');
+    const uploadInput = document.getElementById('image-upload');
+    const statusMsg = document.getElementById('status-msg');
+    const previewImg = document.getElementById('receipt-preview');
 
-    upload.addEventListener('change', async (e) => {
+    uploadInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Visual Feedback
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = 'block';
-        status.style.display = 'block';
-        status.innerText = "Connecting to OCR Engine... 🔌";
+        // Show UI feedback
+        previewImg.src = URL.createObjectURL(file);
+        previewImg.style.display = 'block';
+        statusMsg.style.display = 'block';
+        statusMsg.innerText = "Starting OCR Engine... ⚡";
 
         try {
-            // New v5 syntax for best performance
             const worker = await Tesseract.createWorker('eng');
-            status.innerText = "Analyzing Receipt Text... 📝";
+            statusMsg.innerText = "Reading Receipt Details... 🔍";
             
             const { data: { text } } = await worker.recognize(file);
-            console.log("Extracted Data:", text);
+            console.log("Extracted Text:", text); // Debugging info
 
-            // 1. IMPROVED AMOUNT FINDER (Look for £ or TOTAL)
-            const priceRegex = /(?:£|GBP|TOTAL|SUM|DUE|AMT)\s*([\d,]+\.\d{2})/i;
-            const matchPrice = text.match(priceRegex);
-            if (matchPrice) document.getElementById('amount').value = matchPrice[1].replace(',', '');
+            // 1. IMPROVED AMOUNT FINDER
+            // Finds numbers after £, TOTAL, AMT, or just the largest decimal number
+            const amountRegex = /(?:£|TOTAL|GBP|AMT|DUE)\s*([\d,]+\.\d{2})/i;
+            const foundAmount = text.match(amountRegex);
+            if (foundAmount) {
+                document.getElementById('res-amount').value = foundAmount[1].replace(',', '');
+            } else {
+                // Fallback: Find the last decimal number in the text (often the total)
+                const allAmounts = text.match(/\d+\.\d{2}/g);
+                if (allAmounts) document.getElementById('res-amount').value = allAmounts[allAmounts.length - 1];
+            }
 
-            // 2. IMPROVED DATE FINDER (UK Format)
+            // 2. IMPROVED DATE FINDER
             const dateRegex = /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/;
-            const matchDate = text.match(dateRegex);
-            if (matchDate) document.getElementById('date').value = matchDate[0];
+            const foundDate = text.match(dateRegex);
+            if (foundDate) document.getElementById('res-date').value = foundDate[0];
 
-            status.innerText = "Done! Review details below. ✅";
+            statusMsg.innerText = "Scan Successful! ✅";
+            statusMsg.style.background = "#d4edda";
+            statusMsg.style.color = "#155724";
+            
             await worker.terminate();
         } catch (err) {
-            console.error(err);
-            status.innerText = "Error: Please use a clearer photo. ❌";
+            console.error("Scan Error:", err);
+            statusMsg.innerText = "Scan failed. Please use a clearer photo. ❌";
+            statusMsg.style.background = "#f8d7da";
+            statusMsg.style.color = "#721c24";
         }
     });
 
-    function saveRecord() {
-        const d = document.getElementById('date').value;
-        const a = document.getElementById('amount').value;
-        const c = document.getElementById('category').value;
-        if(!d || !a) { alert("Please ensure Date and Amount are filled."); return; }
+    function downloadCSV() {
+        const date = document.getElementById('res-date').value || "Unknown";
+        const amount = document.getElementById('res-amount').value || "0.00";
+        const category = document.getElementById('res-category').value;
 
-        const csvData = "Date,Amount,Category\n" + `${d},${a},${c}`;
-        const blob = new Blob([csvData], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a_tag = document.createElement('a');
-        a_tag.setAttribute('href', url);
-        a_tag.setAttribute('download', `UK-Tax-Record-${d}.csv`);
-        a_tag.click();
+        // Create CSV with BOM for Excel Support
+        const csvContent = "\uFEFFDate,Amount,Category\n" + `"${date}","${amount}","${category}"`;
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", `UK-Receipt-${date.replace(/[\/\.]/g, '-')}.csv`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     }
 </script>
 
